@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Find and join Discord communities. A community-run, decentralized server list.">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<link rel="icon" id="fav" href="data:,">
+<title>CondoIndex – Discover Discord communities</title>
+<style>
+:root{--bg:#0b0d12;--bg2:#11141b;--card:#151922;--line:#252b3a;--fg:#eef0f6;--mut:#8f98ad;--acc:#6c7bff;--acc2:#a06bff;--ok:#3ddc97;--err:#ff6b7a;--nav:rgba(11,13,18,.72);color-scheme:dark}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6fb;--bg2:#fff;--card:#fff;--line:#e2e6f0;--fg:#141824;--mut:#606a80;--nav:rgba(255,255,255,.8);color-scheme:light}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:auto;padding:0 18px}
+.mut{color:var(--mut);font-size:13px}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* buttons + inputs */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:inherit;font-weight:600;padding:9px 16px;border-radius:11px;border:1px solid transparent;cursor:pointer;text-decoration:none;color:var(--fg);background:transparent;transition:transform .15s,box-shadow .2s,background .2s,border-color .2s,filter .2s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 6px 18px -6px var(--acc)}
+.btn.pri:hover{filter:brightness(1.1);box-shadow:0 10px 24px -6px var(--acc);transform:translateY(-1px)}
+.btn.ghost{border-color:var(--line);background:var(--bg2)}.btn.ghost:hover{border-color:var(--acc)}
+.btn.danger{border-color:color-mix(in srgb,var(--err) 40%,transparent);color:var(--err)}.btn.danger:hover{background:color-mix(in srgb,var(--err) 12%,transparent)}
+.btn.sm{padding:6px 11px;font-size:13px}.btn.big{padding:13px 24px;font-size:16px}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:10px 12px;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:20;background:var(--nav);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid transparent;transition:border-color .3s,box-shadow .3s}
+.nav.sc{border-color:var(--line);box-shadow:0 8px 30px -18px #000}
+.navin{display:flex;align-items:center;gap:10px;height:62px}.sp{flex:1}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;text-decoration:none;letter-spacing:-.01em}
+.mark{display:grid;place-items:center;font-size:17px;line-height:1;width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc2));transition:transform .4s}
+.logo:hover .mark{transform:rotate(90deg) scale(1.1)}
+.who{color:var(--mut);font-size:13px}
+
+/* hero */
+.hero{position:relative;overflow:hidden;text-align:center;padding:78px 0 44px}
+.blob{position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(90px);opacity:.32;z-index:0;animation:float 14s ease-in-out infinite alternate}
+.b1{background:var(--acc);left:-90px;top:-120px}.b2{background:var(--acc2);right:-80px;top:-60px;animation-delay:-5s}.b3{background:#35c9ff;left:38%;bottom:-260px;animation-delay:-9s}
+.hero .wrap{position:relative;z-index:1}
+.hero h1{margin:0;font-size:clamp(32px,6vw,58px);line-height:1.08;letter-spacing:-.03em;animation:up .7s both}
+.grad{background:linear-gradient(90deg,var(--acc),var(--acc2),#35c9ff,var(--acc));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shift 8s linear infinite}
+.hero p{max-width:560px;margin:16px auto 0;color:var(--mut);font-size:17px;animation:up .7s .12s both}
+.search{display:flex;align-items:center;gap:8px;max-width:640px;margin:30px auto 0;padding:6px 8px 6px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px -28px #000;transition:border-color .2s,box-shadow .2s;animation:up .7s .24s both}
+.search:focus-within{border-color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 22%,transparent)}
+.search svg{flex:none;color:var(--mut)}
+.search input{flex:1;min-width:0;background:transparent;border:0;box-shadow:none;padding:10px 4px;font-size:16px}
+.search select{border:0;background:var(--card);padding:9px 10px;box-shadow:none}
+
+/* list */
+.bar{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;margin:6px 0 18px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:13px;padding:6px 14px;border-radius:99px;border:1px solid var(--line);background:var(--bg2);color:var(--fg);cursor:pointer;transition:all .2s}
+.chip:hover{border-color:var(--acc);transform:translateY(-1px)}
+.chip.on{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;padding-bottom:50px}
+.card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;animation:rise .5s calc(var(--i)*45ms) both;transition:transform .25s,box-shadow .25s,border-color .25s}
+.card:hover{transform:translateY(-5px);border-color:hsl(var(--h) 70% 55% / .6);box-shadow:0 22px 40px -24px hsl(var(--h) 80% 50% / .7)}
+.cover{position:relative;height:96px;background:linear-gradient(135deg,hsl(var(--h) 70% 48%),hsl(calc(var(--h) + 55) 70% 34%)) center/cover;overflow:hidden}
+.cover::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 40%,var(--card))}
+.body{display:flex;flex-direction:column;gap:10px;padding:0 16px 16px;flex:1}
+.top{display:flex;align-items:flex-end;gap:12px;margin-top:-30px;position:relative;z-index:1}
+.ava{flex:none;width:54px;height:54px;border-radius:15px;display:grid;place-items:center;font-weight:800;font-size:22px;color:#fff;background:linear-gradient(135deg,hsl(var(--h) 70% 52%),hsl(calc(var(--h) + 55) 70% 38%));border:3px solid var(--card)}
+.top h3{margin:0;font-size:17px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px;box-shadow:0 0 0 0 var(--ok);animation:pulse 2s infinite}
+.desc{margin:0;color:var(--mut);font-size:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;min-height:4.5em}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font:inherit;font-size:12px;padding:2px 10px;border-radius:99px;border:0;cursor:pointer;color:var(--fg);background:color-mix(in srgb,var(--acc) 16%,transparent);transition:background .2s}
+.tag:hover{background:color-mix(in srgb,var(--acc) 34%,transparent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}.row.end{justify-content:flex-end;margin-top:14px}
+.body .row .pri{flex:1}
+.sk{height:262px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(90deg,var(--card) 25%,var(--line) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.3s infinite}
+.empty{text-align:center;padding:60px 0 90px;color:var(--mut);animation:up .5s both}.empty b{display:block;font-size:20px;color:var(--fg);margin-bottom:6px}
+footer{border-top:1px solid var(--line);padding:26px 0;text-align:center;color:var(--mut);font-size:13px}
+
+/* modal */
+.ov{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(5,7,12,.62);backdrop-filter:blur(5px);animation:fade .2s both}
+.ov.out{animation:fade .2s reverse both}
+.modal{width:min(540px,100%);max-height:90vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 40px 80px -30px #000;animation:pop .28s cubic-bezier(.2,1.2,.4,1) both}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.mh h2{margin:0;font-size:20px}
+.x{width:32px;height:32px;border-radius:9px;border:0;background:var(--bg2);color:var(--mut);cursor:pointer;transition:transform .2s,color .2s}.x:hover{color:var(--fg);transform:rotate(90deg)}
+.modal input,.modal textarea,.modal select{width:100%;margin:6px 0}
+.modal h3{margin:20px 0 4px;font-size:15px}
+.mi{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:8px;padding:11px 13px;border:1px solid var(--line);border-radius:13px;background:var(--bg2)}
+.mi.col{flex-direction:column;align-items:flex-start}.mi .row{margin-top:0}.mi p{margin:4px 0}
+.cap{display:flex;justify-content:center;min-height:70px;margin-top:14px}
+
+/* toast */
+#toasts{position:fixed;right:18px;bottom:18px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 36px)}
+.toast{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);padding:12px 16px;border-radius:12px;box-shadow:0 16px 40px -18px #000;animation:slide .3s both}
+.toast.ok{border-left-color:var(--ok)}.toast.err{border-left-color:var(--err)}.toast.out{animation:slide .3s reverse both}
+
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+@keyframes float{to{transform:translate(60px,40px) scale(1.15)}}
+@keyframes shift{to{background-position:300% 0}}
+@keyframes shimmer{to{background-position:-200% 0}}
+@keyframes pulse{70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media(max-width:560px){.who{display:none}.hero{padding-top:50px}.navin .btn{padding:8px 11px;font-size:13px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+
+<header class="nav" id="nav"><div class="wrap navin">
+ <a class="logo" href="#"><span class="mark"></span><span id="brand">CondoIndex</span></a>
+ <div class="sp"></div>
+ <span id="who" class="who"></span>
+ <button class="btn ghost" id="btnRep" hidden>Reports</button>
+ <button class="btn pri" id="btnAdd" hidden>＋ Add server</button>
+ <button class="btn ghost" id="auth">Log in with Discord</button>
+</div></header>
+
+<section class="hero">
+ <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+ <div class="wrap">
+  <h1>Find your next<br><span class="grad">Discord community</span></h1>
+  <p>Browse servers listed by their owners. No tracking, no gatekeepers, just communities.</p>
+  <div class="search">
+   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+   <input id="q" placeholder="Search servers…" aria-label="Search servers" autocomplete="off">
+   <select id="sort" aria-label="Sort"><option value="bump">Recently bumped</option><option value="members">Most members</option></select>
+  </div>
+ </div>
+</section>
+
+<main class="wrap">
+ <div class="bar"><div id="tags" class="chips"></div><span id="count" class="mut"></span></div>
+ <div id="list" class="grid"></div>
+ <div id="empty" class="empty" hidden><b>No servers found</b>Try another search or tag.</div>
+</main>
+
+<footer>Community-run and decentralized. This site is a single static file that can be hosted anywhere.</footer>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* ---- CONFIG ----
+   API: leave '' when this page is served by the same Worker as the API.
+        If you host this file on another provider, put your Worker URL here, e.g. 'https://serverlist.ferasih906.workers.dev'
+   SITEKEY: your Cloudflare Turnstile site key
+   NAME: the site name
+   ICON: your logo and browser-tab icon. Use any of these:
+         ''             = default gradient icon
+         'icon.png'     = an image file placed next to this index.html (png, jpg, svg, webp, ico)
+         'https://...'  = a link to an image
+         '🏢'           = an emoji */
+const CFG={API:'https://serverlist.ferasih906.workers.dev',SITEKEY:'0x4AAAAAAF55IZ6FOC8xfFqS',NAME:'CondoIndex',ICON:''}
+
+const $=id=>document.getElementById(id)
+const api=async(p,o={})=>{const r=await fetch(CFG.API+'/api'+p,o);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Error '+r.status));return j}
+const post=(p,b)=>api(p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})})
+function el(t,props={},...kids){
+ const e=document.createElement(t)
+ for(const[k,v]of Object.entries(props)){if(k==='style')e.style.cssText=v;else if(k in e)e[k]=v;else e.setAttribute(k,v)}
+ kids.flat().filter(k=>k!=null&&k!==false).forEach(k=>e.append(k));return e
+}
+const fmt=n=>new Intl.NumberFormat('en',{notation:'compact'}).format(n||0)
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h}
+async function shrink(file){
+ const img=await createImageBitmap(file),r=Math.min(1,1280/img.width)
+ const cv=document.createElement('canvas');cv.width=img.width*r;cv.height=img.height*r
+ cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height)
+ for(let q=.85;q>.2;q-=.1){const b=await new Promise(res=>cv.toBlob(res,'image/jpeg',q));if(b.size<390000)return b}
+ throw new Error('image too complex')
+}
+
+function brand(){
+ document.title=CFG.NAME+' – Discover Discord communities'
+ $('brand').textContent=CFG.NAME
+ const m=document.querySelector('.mark'),ic=(CFG.ICON||'').trim()
+ const isImg=/^(https?:|data:|\/|\.\/)|\.(png|jpe?g|svg|webp|ico|gif)(\?.*)?$/i.test(ic)
+ let fav
+ if(ic&&isImg){m.style.background=`url("${ic}") center/cover`;fav=ic}
+ else if(ic){m.textContent=ic;m.style.background='none';fav='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".88em" font-size="88">${ic}</text></svg>`)}
+ else fav='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6c7bff"/><stop offset="1" stop-color="#a06bff"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#g)"/></svg>')
+ $('fav').href=fav
+}
+
+let me=null,admin=false,uname='',tag='',timer
+const allTags=new Set()
+
+function toast(msg,type=''){
+ const t=el('div',{className:'toast '+type,textContent:msg});$('toasts').append(t)
+ setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},3600)
+}
+function modal(title,...kids){
+ const ov=el('div',{className:'ov'}),box=el('div',{className:'modal',role:'dialog','aria-modal':'true','aria-label':title})
+ const esc=e=>{if(e.key==='Escape')close()}
+ const close=()=>{document.removeEventListener('keydown',esc);ov.classList.add('out');setTimeout(()=>ov.remove(),200)}
+ document.addEventListener('keydown',esc)
+ ov.onclick=e=>{if(e.target===ov)close()}
+ box.append(el('div',{className:'mh'},el('h2',{textContent:title}),el('button',{className:'x',textContent:'✕','aria-label':'Close',onclick:close})),...kids)
+ ov.append(box);document.body.append(ov);return{close,box}
+}
+
+/* ---- server cards ---- */
+function card(s,i){
+ const h=hue(s.name||'x')
+ const cover=el('div',{className:'cover'})
+ if(s.background&&s.background.startsWith('/api/bg/'))cover.style.backgroundImage=`url(${CFG.API+s.background})`
+ const tags=s.tags?s.tags.split(','):[]
+ return el('article',{className:'card',style:`--i:${Math.min(i,12)};--h:${h}`},cover,
+  el('div',{className:'body'},
+   el('div',{className:'top'},
+    el('div',{className:'ava',textContent:(s.name||'?').trim().charAt(0).toUpperCase()}),
+    el('div',{style:'min-width:0'},el('h3',{textContent:s.name}),el('span',{className:'mut'},el('i',{className:'dot'}),fmt(s.member_count)+' members'))),
+   el('p',{className:'desc',textContent:s.description||'No description yet.'}),
+   el('div',{className:'tags'},tags.map(t=>el('button',{className:'tag',textContent:t,onclick:()=>setTag(t)}))),
+   el('div',{className:'row'},
+    el('button',{className:'btn pri',textContent:'Join',onclick:()=>join(s)}),
+    el('button',{className:'btn ghost',textContent:'Report',onclick:()=>reportModal(s)}),
+    admin?el('button',{className:'btn danger',textContent:'Delete',onclick:()=>del(s)}):null)))
+}
+function renderTags(){
+ $('tags').replaceChildren(
+  el('button',{className:'chip'+(tag?'':' on'),textContent:'All',onclick:()=>setTag('')}),
+  ...[...allTags].slice(0,14).map(t=>el('button',{className:'chip'+(tag===t?' on':''),textContent:t,onclick:()=>setTag(t)})))
+}
+function setTag(t){tag=tag===t?'':t;load();scrollTo({top:Math.max(0,$('tags').offsetTop-90),behavior:'smooth'})}
+
+async function load(){
+ if(!$('list').children.length)$('list').replaceChildren(...Array.from({length:6},()=>el('div',{className:'sk'})))
+ try{
+  const p=new URLSearchParams({q:$('q').value,tag,sort:$('sort').value})
+  const list=await api('/servers?'+p)
+  list.forEach(s=>(s.tags||'').split(',').filter(Boolean).forEach(t=>allTags.add(t)))
+  renderTags()
+  $('list').replaceChildren(...list.map(card))
+  $('empty').hidden=list.length>0
+  $('count').textContent=list.length+(list.length===1?' server':' servers')
+ }catch(e){$('list').replaceChildren();toast(e.message,'err')}
+}
+
+/* ---- actions ---- */
+function join(s){
+ const w=el('div',{className:'cap',textContent:'Loading captcha…'})
+ const m=modal('Join '+s.name,el('p',{className:'mut',textContent:'Quick check to make sure you are human.'}),w)
+ let tries=0
+ const run=()=>{
+  if(!window.turnstile){if(++tries>50){w.textContent='Captcha could not load.';return}return setTimeout(run,150)}
+  w.textContent=''
+  turnstile.render(w,{sitekey:CFG.SITEKEY,theme:'auto',callback:async token=>{
+   try{
+    const r=await post(`/servers/${s.id}/join`,{token})
+    w.replaceChildren(el('a',{className:'btn pri big',href:r.url,target:'_blank',rel:'noopener noreferrer',textContent:'Continue to Discord →'}))
+   }catch(e){toast(e.message,'err');m.close()}
+  }})
+ }
+ run()
+}
+function reportModal(s){
+ const ta=el('textarea',{rows:4,maxLength:500,placeholder:'What is wrong with this server?'})
+ const m=modal('Report '+s.name,ta,el('div',{className:'row end'},
+  el('button',{className:'btn ghost',textContent:'Cancel',onclick:()=>m.close()}),
+  el('button',{className:'btn pri',textContent:'Send report',onclick:async()=>{
+   if(!ta.value.trim())return toast('Write a reason first','err')
+   try{await post(`/servers/${s.id}/report`,{reason:ta.value});toast('Report sent. Thank you!','ok');m.close()}catch(e){toast(e.message,'err')}}})))
+}
+function del(s,after){
+ const m=modal('Delete server?',el('p',{textContent:`"${s.name}" will be removed permanently. This cannot be undone.`}),
+  el('div',{className:'row end'},
+   el('button',{className:'btn ghost',textContent:'Cancel',onclick:()=>m.close()}),
+   el('button',{className:'btn danger',textContent:'Delete',onclick:async()=>{
+    try{await api('/servers/'+s.id,{method:'DELETE'});m.close();toast('Server deleted','ok');load();if(after)after()}catch(e){toast(e.message,'err')}}})))
+}
+
+async function dashboard(){
+ let guilds=[]
+ try{guilds=await api('/myguilds')}catch(e){toast(e.message,'err')}
+ const sel=el('select',{},guilds.length?guilds.map(g=>el('option',{value:g.id,textContent:g.name})):el('option',{value:'',textContent:'No servers found, log out and in again'}))
+ const inv=el('input',{placeholder:'Permanent invite (discord.gg/xxxx)'})
+ const desc=el('textarea',{rows:4,maxLength:2000,placeholder:'Description'})
+ const tg=el('input',{placeholder:'Tags, comma separated (max 5)'})
+ const mine=el('div',{})
+ const refresh=async()=>{
+  let list=[];try{list=await api('/mine')}catch(e){toast(e.message,'err')}
+  mine.replaceChildren(el('h3',{textContent:'My servers'}),...(list.length?list.map(s=>{
+   const f=el('input',{type:'file',accept:'image/png,image/jpeg,image/webp',hidden:true,onchange:async()=>{
+    try{await api(`/servers/${s.id}/background`,{method:'POST',body:await shrink(f.files[0])});toast('Background updated','ok');load()}catch(e){toast(e.message,'err')}}})
+   return el('div',{className:'mi'},el('b',{textContent:s.name+(s.verified?' ✓':' (unverified)')}),
+    el('div',{className:'row'},
+     s.verified?el('button',{className:'btn ghost sm',textContent:'Bump',onclick:async()=>{
+      try{await post(`/servers/${s.id}/bump`);toast('Bumped to the top!','ok');load()}catch(e){toast(e.message==='cooldown'?'Wait 2h between bumps':e.message,'err')}}}):null,
+     el('button',{className:'btn ghost sm',textContent:'Background',onclick:()=>f.click()}),
+     el('button',{className:'btn danger sm',textContent:'Delete',onclick:()=>del(s,refresh)}),f))
+  }):[el('p',{className:'mut',textContent:'You have not listed a server yet.'})]))
+ }
+ modal('Add your server',sel,inv,desc,tg,
+  el('div',{className:'row end'},el('button',{className:'btn pri',textContent:'Create listing',onclick:async()=>{
+   try{await post('/servers',{guild_id:sel.value,invite:inv.value,description:desc.value,tags:tg.value})
+    toast('Your server is listed!','ok');inv.value=desc.value=tg.value='';refresh();load()}catch(e){toast(e.message,'err')}}})),mine)
+ refresh()
+}
+
+async function reports(){
+ const box=el('div',{});modal('Reports',box)
+ const render=async()=>{
+  let list=[];try{list=await api('/reports')}catch(e){toast(e.message,'err');return}
+  box.replaceChildren(...(list.length?list.map(r=>el('div',{className:'mi col'},
+   el('b',{textContent:r.name||'(deleted server)'}),
+   el('span',{className:'mut',textContent:new Date(r.created_at*1000).toLocaleString()}),
+   el('p',{textContent:r.reason||'(no reason)'}),
+   el('div',{className:'row'},
+    r.invite?el('a',{className:'btn ghost sm',href:'https://discord.gg/'+encodeURIComponent(r.invite),target:'_blank',rel:'noopener noreferrer',textContent:'Open'}):null,
+    el('button',{className:'btn ghost sm',textContent:'Dismiss',onclick:async()=>{try{await api('/reports/'+r.id,{method:'DELETE'});render()}catch(e){toast(e.message,'err')}}}),
+    r.name?el('button',{className:'btn danger sm',textContent:'Delete server',onclick:()=>del({id:r.server_id,name:r.name},render)}):null)))
+  :[el('p',{className:'mut',textContent:'No reports. 🎉'})]))
+ }
+ render()
+}
+
+/* ---- boot ---- */
+async function init(){
+ try{const m=await api('/me');me=m.pubkey;admin=!!m.admin;uname=m.name||''}catch{me=null;admin=false}
+ $('auth').textContent=me?'Log out':'Log in with Discord'
+ $('who').textContent=me?uname:''
+ $('btnAdd').hidden=!me;$('btnRep').hidden=!admin
+ load()
+}
+$('auth').onclick=async()=>{if(me){await post('/logout');return init()}location.href=CFG.API+'/api/login'}
+$('btnAdd').onclick=dashboard;$('btnRep').onclick=reports
+$('q').oninput=()=>{clearTimeout(timer);timer=setTimeout(load,250)}
+$('sort').onchange=load
+addEventListener('scroll',()=>$('nav').classList.toggle('sc',scrollY>8),{passive:true})
+brand()
+init()
+</script></body></html>
